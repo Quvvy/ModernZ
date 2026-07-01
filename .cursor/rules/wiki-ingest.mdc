@@ -1,0 +1,36 @@
+---
+description: LLM Wiki ingest — when user asks to ingest, query, or lint the design wiki
+alwaysApply: false
+---
+
+# Design wiki (llm-wiki)
+
+Wiki vault: `C:\Users\elifs\Projects\llm-wiki`
+
+When the user asks to **ingest**, **query**, or **lint** the wiki:
+
+1. Read `C:\Users\elifs\Projects\llm-wiki\AGENTS.md` and follow it exactly.
+2. Raw sources for this project live in `C:\Users\elifs\Projects\llm-wiki\raw\modernz\`.
+3. Never modify `raw/` — only write to `wiki/` and `outputs/` in llm-wiki.
+4. Tag ModernZ pages with `modernz` in frontmatter.
+5. Use `[[wikilinks]]` for internal references (Obsidian graph view).
+
+## Sync sources from this repo
+
+| Repo | Wiki raw |
+|------|----------|
+| `README.md` | `raw/modernz/README.md` |
+| `docs/*.md` | `raw/modernz/` |
+| `extras/README.md` | `raw/modernz/extras-README.md` |
+| `extras/mpv-mining/README.md` | `raw/modernz/mpv-mining/README.md` |
+| `extras/mpv-mining/YOMITAN-SETUP.md` | `raw/modernz/mpv-mining/YOMITAN-SETUP.md` |
+| `extras/mpv-mining/setup-anki-mining.ps1` | `raw/modernz/mpv-mining/setup-anki-mining.ps1` |
+| `extras/mpv-mining/configure-back-only-furigana.ps1` | `raw/modernz/mpv-mining/configure-back-only-furigana.ps1` |
+| `extras/mpv-mining/yomitan-settings-mining.json` | `raw/modernz/mpv-mining/yomitan-settings-mining.json` |
+| `extras/mpv-mining/*.example` | `raw/modernz/mpv-mining/` |
+
+## Ingest operations
+
+- **Ingest** — read raw source → `wiki/sources/` + entities/concepts → update index + log.
+- **Query** — read `wiki/index.md` first, synthesize with citations.
+- **Lint** — health check → `outputs/lint-YYYY-MM-DD.md` + log entry.
