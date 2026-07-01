@@ -6,7 +6,7 @@ Fetch Japanese subtitles from [Jimaku](https://jimaku.cc/) inside mpv. Designed 
 
 - **Auto-fetch** on file open (uses `media-title` from Seanime debrid playback)
 - **Manual reselect** with `Ctrl+Shift+J` if the wrong sub was picked
-- **Stream cache** under `~/mpv_subs/` for re-watching without re-downloading
+- **Stream cache** under `~/mpv_subs/` (Windows: `%USERPROFILE%\mpv_subs\`) for re-watching without re-downloading
 - API key stored in local `script-opts/jimaku-subs.conf` only (never in this repo)
 
 ## Requirements

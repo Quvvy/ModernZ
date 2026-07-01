@@ -17,35 +17,35 @@ var ARCHIVE_EXT = /\.(zip|7z|rar)$/i;
 var SUB_EXT = /\.(ass|ssa|srt|vtt)$/i;
 var lastAutoPath = null;
 var fetchInProgress = false;
-
-function homeDir() {
-    return mp.utils.getenv('USERPROFILE') || mp.utils.getenv('HOME') || '';
-}
+var manualFlowPaused = false;
 
 function expandPath(path) {
     if (!path) return path;
     if (path.indexOf('~~') === 0) {
-        return mp.utils.join_path(homeDir(), path.replace(/^~~\/?/, ''));
+        return mp.utils.get_user_path(path);
     }
     return path;
+}
+
+function isWindows() {
+    var platform = mp.get_property('platform') || '';
+    return platform.indexOf('win') === 0;
 }
 
 function apiKeyConfigured() {
     return options.api_key && options.api_key !== 'YOUR_KEY_HERE';
 }
 
-function api(url, extraArgs) {
-    if (!apiKeyConfigured()) {
-        showMessage('Jimaku: API key not set in jimaku-subs.conf');
-        return null;
-    }
+function curlFailureMessage(res) {
+    if (!res) return 'Jimaku: request failed';
+    var detail = (res.stderr || res.error_string || '').replace(/\s+/g, ' ').trim();
+    if (detail.length > 80) detail = detail.substring(0, 77) + '...';
+    if (detail) return 'Jimaku: request failed (' + detail + ')';
+    if (res.status) return 'Jimaku: request failed (curl exit ' + res.status + ')';
+    return 'Jimaku: request failed';
+}
 
-    var baseArgs = [
-        'curl', '-s', '--url', url,
-        '--header', 'Authorization: ' + options.api_key,
-    ];
-    var args = baseArgs.concat(extraArgs || []);
-
+function runCurl(args) {
     var res = mp.command_native({
         name: 'subprocess',
         playback_only: false,
@@ -55,7 +55,31 @@ function api(url, extraArgs) {
     });
 
     if (!res || res.status !== 0) {
-        showMessage('Jimaku: request failed');
+        mp.msg.warn('Jimaku curl failed: ' + JSON.stringify({
+            status: res && res.status,
+            stderr: res && res.stderr,
+            error: res && res.error_string,
+        }));
+    }
+
+    return res;
+}
+
+function api(url, extraArgs) {
+    if (!apiKeyConfigured()) {
+        showMessage('Jimaku: API key not set in jimaku-subs.conf');
+        return null;
+    }
+
+    var baseArgs = [
+        'curl', '-s', '-f', '--url', url,
+        '--header', 'Authorization: ' + options.api_key,
+    ];
+    var args = baseArgs.concat(extraArgs || []);
+    var res = runCurl(args);
+
+    if (!res || res.status !== 0) {
+        showMessage(curlFailureMessage(res));
         return null;
     }
 
@@ -72,28 +96,34 @@ function api(url, extraArgs) {
 function curlDownload(url, destPath) {
     if (!apiKeyConfigured()) return false;
 
-    var dir = destPath.replace(/[\\/][^\\/]+$/, '');
-    ensureDir(dir);
+    var res = runCurl([
+        'curl', '-s', '-L', '--url', url,
+        '--header', 'Authorization: ' + options.api_key,
+        '--output', destPath,
+    ]);
 
-    var res = mp.command_native({
-        name: 'subprocess',
-        playback_only: false,
-        capture_stdout: true,
-        capture_stderr: true,
-        args: [
-            'curl', '-s', '-L', '--url', url,
-            '--header', 'Authorization: ' + options.api_key,
-            '--output', destPath,
-        ],
-    });
+    if (!res || res.status !== 0) {
+        mp.msg.warn('Jimaku download failed: ' + (res && res.stderr || res && res.error_string || ''));
+        return false;
+    }
 
-    return res && res.status === 0 && mp.utils.file_info(destPath);
+    return mp.utils.file_info(destPath) !== undefined;
 }
 
 function showMessage(message, persist) {
     var ass_start = mp.get_property_osd('osd-ass-cc/0') || '';
     var ass_stop = mp.get_property_osd('osd-ass-cc/1') || '';
     mp.osd_message(ass_start + '{\\fs16}' + message + ass_stop, persist ? 999 : 2);
+}
+
+function finishManualFlow() {
+    if (!manualFlowPaused) return;
+    mp.set_property('pause', 'no');
+    manualFlowPaused = false;
+}
+
+function endInteractive(interactive) {
+    if (interactive) finishManualFlow();
 }
 
 function inputGet(args) {
@@ -218,8 +248,36 @@ function pickBestSubtitle(files) {
     return candidates[0];
 }
 
-function ensureDir(path) {
-    mp.command_native(['mkdir', path]);
+function ensureDir(dirPath) {
+    if (!dirPath) return false;
+
+    var info = mp.utils.file_info(dirPath);
+    if (info && info.is_dir) return true;
+
+    var args;
+    if (isWindows()) {
+        args = [
+            'powershell', '-NoProfile', '-Command',
+            'New-Item', '-ItemType', 'Directory', '-Force', '-Path', dirPath,
+        ];
+    } else {
+        args = ['mkdir', '-p', dirPath];
+    }
+
+    var res = mp.command_native({
+        name: 'subprocess',
+        playback_only: false,
+        capture_stdout: true,
+        capture_stderr: true,
+        args: args,
+    });
+
+    info = mp.utils.file_info(dirPath);
+    if (info && info.is_dir) return true;
+
+    mp.msg.error('Jimaku: failed to create cache dir: ' + dirPath);
+    if (res && res.stderr) mp.msg.error(res.stderr.replace(/\s+/g, ' ').trim());
+    return false;
 }
 
 function cacheDestination(ctx, subName) {
@@ -227,7 +285,9 @@ function cacheDestination(ctx, subName) {
     var showDir = sanitize(ctx.title).replace(/[<>:"/\\|?*]/g, '_') || 'unknown';
     var epPart = ctx.episode ? ('ep' + ctx.episode) : 'unknown-episode';
     var destDir = mp.utils.join_path(base, showDir, epPart);
-    ensureDir(destDir);
+
+    if (!ensureDir(destDir)) return null;
+
     return mp.utils.join_path(destDir, subName);
 }
 
@@ -235,27 +295,36 @@ function downloadSub(sub, destPath) {
     return curlDownload(sub.url, destPath) ? destPath : null;
 }
 
-function loadSubtitleFile(filePath) {
+function loadSubtitleFile(filePath, interactive) {
     mp.commandv('sub-add', filePath, 'select');
     showMessage('Jimaku: loaded ' + filePath.split(/[\\/]/).pop());
+    endInteractive(interactive);
 }
 
 function selectSub(selectedSub, ctx, interactive) {
     if (!selectedSub || !selectedSub.url) {
         showMessage('Jimaku: invalid subtitle entry');
+        endInteractive(interactive);
         return;
     }
 
     var destPath = cacheDestination(ctx, selectedSub.name);
+    if (!destPath) {
+        showMessage('Jimaku: could not create cache folder');
+        endInteractive(interactive);
+        return;
+    }
+
     showMessage('Jimaku: downloading ' + selectedSub.name);
 
     var saved = downloadSub(selectedSub, destPath);
     if (!saved) {
         showMessage('Jimaku: download failed');
+        endInteractive(interactive);
         return;
     }
 
-    loadSubtitleFile(saved);
+    loadSubtitleFile(saved, interactive);
 }
 
 function selectEpisode(anime, episode, ctx, interactive) {
@@ -265,13 +334,18 @@ function selectEpisode(anime, episode, ctx, interactive) {
     showMessage('Jimaku: fetching subs for ' + anime.name);
     var episodeResults = api(url);
 
-    if (!episodeResults) return;
+    if (!episodeResults) {
+        endInteractive(interactive);
+        return;
+    }
     if (episodeResults.error) {
         showMessage('Jimaku: ' + episodeResults.error);
+        endInteractive(interactive);
         return;
     }
     if (episodeResults.length === 0) {
         showMessage('Jimaku: no subtitle files found');
+        endInteractive(interactive);
         return;
     }
 
@@ -292,7 +366,10 @@ function selectEpisode(anime, episode, ctx, interactive) {
         prompt: 'Select subtitle file: ',
         items: getNames(episodeResults),
         submit: function (id) {
-            selectSub(episodeResults[id - 1], ctx, true);
+            selectSub(episodeResults[id - 1], ctx, interactive);
+        },
+        cancel: function () {
+            endInteractive(interactive);
         },
     });
 }
@@ -305,7 +382,10 @@ function onAnimeSelected(anime, ctx, interactive, episodeOverride) {
             prompt: 'Episode (leave blank for all): ',
             default_text: episode || '',
             submit: function (value) {
-                selectEpisode(anime, value || null, ctx, true);
+                selectEpisode(anime, value || null, ctx, interactive);
+            },
+            cancel: function () {
+                endInteractive(interactive);
             },
         });
         return;
@@ -318,20 +398,23 @@ function searchEntries(searchTerm, ctx, interactive) {
     mp.input.terminate();
     showMessage('Jimaku: searching "' + searchTerm + '"');
 
-    var url = encodeURI(
-        options.api_base_url + '/api/entries/search?anime=true&query=' + searchTerm
-    );
+    var url = options.api_base_url + '/api/entries/search?anime=true&query=' +
+        encodeURIComponent(searchTerm);
     var animeResults = api(url);
 
-    if (!animeResults) return;
+    if (!animeResults) {
+        endInteractive(interactive);
+        return;
+    }
     if (animeResults.error) {
         showMessage('Jimaku: ' + animeResults.error);
+        endInteractive(interactive);
         return;
     }
     if (animeResults.length === 0) {
         showMessage('Jimaku: no results found');
-        if (interactive) return;
-        showMessage('Jimaku: press Ctrl+Shift+J to search manually');
+        endInteractive(interactive);
+        if (!interactive) showMessage('Jimaku: press Ctrl+Shift+J to search manually');
         return;
     }
 
@@ -352,12 +435,20 @@ function searchEntries(searchTerm, ctx, interactive) {
         submit: function (id) {
             onAnimeSelected(animeResults[id - 1], ctx, true, ctx.episode);
         },
+        cancel: function () {
+            endInteractive(interactive);
+        },
     });
 }
 
 function manualReselect() {
+    mp.input.terminate();
+    mp.osd_message('');
+
     var ctx = getMediaContext();
+    manualFlowPaused = true;
     mp.set_property('pause', 'yes');
+
     inputGet({
         prompt: 'Search term: ',
         default_text: ctx.title,
@@ -365,8 +456,8 @@ function manualReselect() {
             if (!term) term = ctx.title;
             searchEntries(term, ctx, true);
         },
+        cancel: finishManualFlow,
     });
-    showMessage('Jimaku: manual search (Ctrl+Shift+J)', true);
 }
 
 function autoFetchFromMedia() {
