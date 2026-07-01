@@ -1,0 +1,22 @@
+# mpvacious mining config for Seanime + Jimaku workflow
+# Copy to portable_config/script-opts/subs2srs.conf (installer may create a default — merge these settings)
+
+deck_name=Anime::Mining
+model_name=Japanese sentences
+sentence_field=SentKanji
+secondary_field=SentEng
+audio_field=SentAudio
+image_field=Image
+note_tag=anime mining %d
+menu_font_size=24
+menu_font_name=Segoe UI
+ankiconnect_url=127.0.0.1:8765
+use_ffmpeg=no
+create_deck=yes
+allow_duplicates=yes
+nuke_spaces=yes
+snapshot_format=webp
+secondary_sub_auto_load=yes
+secondary_sub_lang=eng,en
+secondary_sub_visibility=auto
+enable_new_note_timer=yes

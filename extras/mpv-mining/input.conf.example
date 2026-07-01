@@ -1,0 +1,25 @@
+# Jimaku subs manual reselect
+Ctrl+Shift+j    script-binding jimaku-subs/reselect
+
+# mpvacious — Anki sentence mining (https://github.com/Ajatt-Tools/mpvacious)
+a               script-binding mpvacious-menu-open
+g               script-binding mpvacious-quick-card-menu-open
+Alt+g           script-binding mpvacious-quick-card-sel-menu-open
+Ctrl+n          script-binding mpvacious-export-note
+Ctrl+b          script-binding mpvacious-update-selected-note
+Ctrl+B          script-binding mpvacious-overwrite-selected-note
+Ctrl+m          script-binding mpvacious-update-last-note
+Ctrl+M          script-binding mpvacious-overwrite-last-note
+Ctrl+c          script-binding mpvacious-copy-primary-sub-to-clipboard
+Ctrl+C          script-binding mpvacious-copy-secondary-sub-to-clipboard
+Ctrl+t          script-binding mpvacious-autocopy-toggle
+H               script-binding mpvacious-sub-seek-back
+L               script-binding mpvacious-sub-seek-forward
+Alt+h           script-binding mpvacious-sub-seek-back-pause
+Alt+l           script-binding mpvacious-sub-seek-forward-pause
+Ctrl+h          script-binding mpvacious-sub-rewind
+Ctrl+H          script-binding mpvacious-sub-replay
+Ctrl+L          script-binding mpvacious-sub-play-up-to-next
+Ctrl+v          script-binding mpvacious-secondary-sid-toggle
+Ctrl+k          script-binding mpvacious-secondary-sid-prev
+Ctrl+j          script-binding mpvacious-secondary-sid-next
