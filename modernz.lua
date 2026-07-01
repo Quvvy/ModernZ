@@ -3819,6 +3819,11 @@ local function refresh_video_click_area()
         return
     end
 
+    if mp.get_property_bool("user-data/mpv/console/open") then
+        disable_video_click_area()
+        return
+    end
+
     if state.osc_visible then
         for n = 1, #elements do
             local e = elements[n]
@@ -3847,6 +3852,7 @@ end
 
 local function handle_video_click(what)
     if not user_opts.click_to_pause or not state.enabled or state.idle_active then return end
+    if mp.get_property_bool("user-data/mpv/console/open") then return end
 
     if what == "down" then
         reset_timeout()
@@ -4278,6 +4284,7 @@ mp.observe_property("user-data/mpv/console/open", "bool", function(_, val)
         osc_visible(false)
         wc_visible(false)
     end
+    request_tick()
 end)
 mp.observe_property("display-fps", "number", set_tick_delay)
 observe_cached("demuxer-cache-state", request_tick)

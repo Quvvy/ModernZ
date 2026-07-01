@@ -11,7 +11,7 @@ var options = {
     auto_fetch_delay_ms: 800,
 };
 
-require('mp.options').read_options(options, 'jimaku-subs');
+mp.options.read_options(options, 'jimaku-subs');
 
 var ARCHIVE_EXT = /\.(zip|7z|rar)$/i;
 var SUB_EXT = /\.(ass|ssa|srt|vtt)$/i;
