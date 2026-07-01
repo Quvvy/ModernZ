@@ -1,0 +1,4 @@
+# Never commit local API keys or user mpv configs
+**/jimaku-subs.conf
+.jimaku_api_key
+*.local.conf

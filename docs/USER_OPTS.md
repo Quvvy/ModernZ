@@ -37,7 +37,7 @@ Create `modernz.conf` in your mpv script-opts directory:
 | fadeduration         | 200     | fade-out duration (in ms), set to `"0"` for no fade                                                                                                |
 | fadein               | yes     | whether to enable fade-in effect                                                                                                                   |
 | minmousemove         | 0       | minimum mouse movement (in pixels) required to show OSC                                                                                            |
-| deadzonesize         | 0.75    | controls how much of the window ignores mouse movement for showing the osc; `0.0` always shows on movement, `1.0` only shows when directly hovered |
+| deadzonesize         | 0.0     | controls how much of the window ignores mouse movement for showing the osc; `0.0` always shows on movement, `1.0` only shows when directly hovered |
 | deadzone_hide        | instant | hide behavior when cursor enters deadzone or leaves window: `"instant"` or `"timeout"`                                                             |
 | osc_on_seek          | yes     | show OSC when seeking                                                                                                                              |
 | osc_on_start         | both    | show OSC/window controls on start of every file (`no`, `bottom`, `top`, `both`)                                                                    |
