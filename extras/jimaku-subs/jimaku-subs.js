@@ -248,26 +248,46 @@ function pickBestSubtitle(files) {
     return candidates[0];
 }
 
-function ensureDir(dirPath) {
-    if (!dirPath) return false;
-
-    var info = mp.utils.file_info(dirPath);
-    if (info && info.is_dir) return true;
-
-    var args;
+function normalizePath(path) {
+    if (!path) return path;
     if (isWindows()) {
-        args = ['cmd', '/c', 'mkdir', dirPath];
-    } else {
-        args = ['mkdir', '-p', dirPath];
+        return path.replace(/\//g, '\\');
     }
+    return path;
+}
 
-    var res = mp.command_native({
+function runSubprocess(args) {
+    return mp.command_native({
         name: 'subprocess',
         playback_only: false,
         capture_stdout: true,
         capture_stderr: true,
         args: args,
     });
+}
+
+function ensureDir(dirPath) {
+    if (!dirPath) return false;
+
+    dirPath = normalizePath(dirPath);
+
+    var info = mp.utils.file_info(dirPath);
+    if (info && info.is_dir) return true;
+
+    var res;
+    if (isWindows()) {
+        res = runSubprocess(['cmd', '/c', 'mkdir', dirPath]);
+        info = mp.utils.file_info(dirPath);
+        if (info && info.is_dir) return true;
+
+        var script = 'New-Item -LiteralPath ' + JSON.stringify(dirPath) +
+            ' -ItemType Directory -Force | Out-Null';
+        res = runSubprocess([
+            'powershell', '-NoProfile', '-NonInteractive', '-Command', script,
+        ]);
+    } else {
+        res = runSubprocess(['mkdir', '-p', dirPath]);
+    }
 
     info = mp.utils.file_info(dirPath);
     if (info && info.is_dir) return true;
@@ -291,19 +311,19 @@ function formatPathHint(fullPath) {
 }
 
 function cacheDestination(ctx, subName) {
-    var base = expandPath(options.cache_dir);
+    var base = normalizePath(expandPath(options.cache_dir));
     var showDir = sanitize(ctx.title)
         .replace(/[<>:"/\\|?*]/g, '_')
         .replace(/\s+/g, '_')
         || 'unknown';
     var epPart = ctx.episode ? ('ep' + ctx.episode) : 'unknown-episode';
-    var destDir = mp.utils.join_path(base, showDir, epPart);
+    var destDir = normalizePath(mp.utils.join_path(base, showDir, epPart));
 
     if (!ensureDir(destDir)) {
         return { error: destDir };
     }
 
-    return { path: mp.utils.join_path(destDir, subName) };
+    return { path: normalizePath(mp.utils.join_path(destDir, subName)) };
 }
 
 function downloadSub(sub, destPath) {
