@@ -9,8 +9,8 @@ auto_fetch=yes
 # Preferred subtitle language tag for auto-selection
 language_preference=ja
 
-# Where to store subs for streams (~~ = home directory)
-cache_dir=~~/mpv_subs
+# Where to store subs for streams (~/ = user home; ~~ = mpv config dir)
+cache_dir=~/mpv_subs
 
 # Jimaku API base URL
 api_base_url=https://jimaku.cc

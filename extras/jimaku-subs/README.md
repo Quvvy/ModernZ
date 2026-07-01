@@ -40,8 +40,10 @@ Ctrl+Shift+j    script-binding jimaku-subs/reselect
 ```ini
 slang=ja,jp,jpn,en
 sub-auto=fuzzy
-sub-file-paths=mpv_subs:subs:subtitles
+sub-file-paths=~/mpv_subs:subs:subtitles
 ```
+
+**Cache path note:** Use `~/mpv_subs` (user home) in `jimaku-subs.conf`, not `~~/mpv_subs`. With portable_config mpv, `~~` points at the config folder, not your home directory.
 
 ## Usage
 

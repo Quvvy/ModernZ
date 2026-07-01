@@ -5,7 +5,7 @@ var options = {
     api_key: '',
     auto_fetch: true,
     language_preference: 'ja',
-    cache_dir: '~~/mpv_subs',
+    cache_dir: '~/mpv_subs',
     api_base_url: 'https://jimaku.cc',
     max_entry_results: 10,
     auto_fetch_delay_ms: 800,
@@ -21,7 +21,7 @@ var manualFlowPaused = false;
 
 function expandPath(path) {
     if (!path) return path;
-    if (path.indexOf('~~') === 0) {
+    if (path.indexOf('~') === 0) {
         return mp.utils.get_user_path(path);
     }
     return path;
@@ -256,10 +256,7 @@ function ensureDir(dirPath) {
 
     var args;
     if (isWindows()) {
-        args = [
-            'powershell', '-NoProfile', '-Command',
-            'New-Item', '-ItemType', 'Directory', '-Force', '-Path', dirPath,
-        ];
+        args = ['cmd', '/c', 'mkdir', dirPath];
     } else {
         args = ['mkdir', '-p', dirPath];
     }
@@ -275,20 +272,38 @@ function ensureDir(dirPath) {
     info = mp.utils.file_info(dirPath);
     if (info && info.is_dir) return true;
 
-    mp.msg.error('Jimaku: failed to create cache dir: ' + dirPath);
-    if (res && res.stderr) mp.msg.error(res.stderr.replace(/\s+/g, ' ').trim());
+    mp.msg.warn('Jimaku: failed to create cache dir: ' + dirPath);
+    if (res && res.stderr) {
+        mp.msg.warn(res.stderr.replace(/\s+/g, ' ').trim());
+    }
     return false;
+}
+
+function formatPathHint(fullPath) {
+    if (!fullPath) return '';
+    var base = expandPath(options.cache_dir);
+    var hint = fullPath;
+    if (base && fullPath.indexOf(base) === 0) {
+        hint = '~/mpv_subs' + fullPath.substring(base.length);
+    }
+    if (hint.length > 60) hint = hint.substring(0, 57) + '...';
+    return hint;
 }
 
 function cacheDestination(ctx, subName) {
     var base = expandPath(options.cache_dir);
-    var showDir = sanitize(ctx.title).replace(/[<>:"/\\|?*]/g, '_') || 'unknown';
+    var showDir = sanitize(ctx.title)
+        .replace(/[<>:"/\\|?*]/g, '_')
+        .replace(/\s+/g, '_')
+        || 'unknown';
     var epPart = ctx.episode ? ('ep' + ctx.episode) : 'unknown-episode';
     var destDir = mp.utils.join_path(base, showDir, epPart);
 
-    if (!ensureDir(destDir)) return null;
+    if (!ensureDir(destDir)) {
+        return { error: destDir };
+    }
 
-    return mp.utils.join_path(destDir, subName);
+    return { path: mp.utils.join_path(destDir, subName) };
 }
 
 function downloadSub(sub, destPath) {
@@ -308,16 +323,20 @@ function selectSub(selectedSub, ctx, interactive) {
         return;
     }
 
-    var destPath = cacheDestination(ctx, selectedSub.name);
-    if (!destPath) {
-        showMessage('Jimaku: could not create cache folder');
+    var dest = cacheDestination(ctx, selectedSub.name);
+    if (!dest || dest.error) {
+        var failMsg = 'Jimaku: could not create cache folder';
+        if (dest && dest.error) {
+            failMsg += ' (' + formatPathHint(dest.error) + ')';
+        }
+        showMessage(failMsg);
         endInteractive(interactive);
         return;
     }
 
     showMessage('Jimaku: downloading ' + selectedSub.name);
 
-    var saved = downloadSub(selectedSub, destPath);
+    var saved = downloadSub(selectedSub, dest.path);
     if (!saved) {
         showMessage('Jimaku: download failed');
         endInteractive(interactive);
