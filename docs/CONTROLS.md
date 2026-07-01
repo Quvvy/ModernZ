@@ -9,6 +9,12 @@ Below is a list that explains the OSC buttons function depending on how you inte
 > [!NOTE]
 > Middle clicking performs the same function as `Shift+left mouse button`, allowing for one handed use
 
+### Video Area
+
+| Action           | Function                                      |
+| ---------------- | --------------------------------------------- |
+| Left mouse click | Toggle play/pause (when not clicking a control) |
+
 ### Title
 
 | Action            | Function                     |

@@ -47,6 +47,7 @@ local user_opts = {
     osc_on_start = "both",                 -- show OSC on start of every file ("no", "bottom", "top", "both")
     mouse_seek_pause = true,               -- pause video while seeking with mouse move (on button hold)
     force_seek_tooltip = false,            -- force show seekbar tooltip on mouse drag, even if not hovering seekbar
+    click_to_pause = true,                 -- toggle play/pause on left click on the video area
 
     vidscale = "auto",                     -- scale osc with the video
     scalewindowed = 1.0,                   -- osc scale factor when windowed
@@ -588,7 +589,7 @@ local state = {
     anitype = nil,                          -- current type of animation
     animation = nil,                        -- current animation alpha
     mouse_down_counter = 0,                 -- used for softrepeat
-    active_element = nil,                   -- nil = none, 0 = background, 1+ = see elements[]
+    active_element = nil,                   -- nil = none, 1+ = see elements[]
     active_event_source = nil,              -- the "button" that issued the current event
     tc_left_rem = not user_opts.timecurrent,-- if the left timecode should display current or remaining time
     tc_ms = user_opts.timems,               -- Should the timecodes display their time with milliseconds
@@ -620,6 +621,7 @@ local state = {
     windowcontrols_buttons = false,
     windowcontrols_title = false,
     windowcontrols_ontop = false,
+    video_click_enabled = false,
     dmx_cache = 0,
     border = true,
     window_maximized = false,
@@ -3798,6 +3800,67 @@ local function refresh_input_area()
         hovered_mid and hovered_mid.hitbox.x2 or 0, hovered_mid and hovered_mid.hitbox.y2 or 0, "input_mid")
 end
 
+local function disable_video_click_area()
+    set_virt_mouse_area(0, 0, 0, 0, "video_click")
+    if state.video_click_enabled then
+        mp.disable_key_bindings("video_click")
+        state.video_click_enabled = false
+    end
+end
+
+local function refresh_video_click_area()
+    if not user_opts.click_to_pause or not state.enabled or state.idle_active then
+        disable_video_click_area()
+        return
+    end
+
+    if mouse_in_area({"window-controls", "window-controls-title", "window-controls-ontop"}) then
+        disable_video_click_area()
+        return
+    end
+
+    if state.osc_visible then
+        for n = 1, #elements do
+            local e = elements[n]
+            if e.visible and e.enabled ~= false and e.hitbox and mouse_hit(e) and has_click_action(e) then
+                disable_video_click_area()
+                return
+            end
+        end
+    end
+
+    local areas = osc_param.areas["showhide"]
+    if not areas or #areas == 0 then
+        disable_video_click_area()
+        return
+    end
+
+    for _, cords in ipairs(areas) do
+        set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, "video_click")
+    end
+
+    if not state.video_click_enabled then
+        mp.enable_key_bindings("video_click")
+        state.video_click_enabled = true
+    end
+end
+
+local function handle_video_click(what)
+    if not user_opts.click_to_pause or not state.enabled or state.idle_active then return end
+
+    if what == "down" then
+        reset_timeout()
+    elseif what == "up" then
+        if state.eof_reached then
+            mp.commandv("seek", 0, "absolute-percent")
+            mp.commandv("set", "pause", "no")
+        else
+            mp.command(user_opts.play_pause_mbtn_left_command)
+        end
+    end
+    request_tick()
+end
+
 local function process_event(source, what)
     local action = string.format("%s%s", source, what and ("_" .. what) or "")
 
@@ -3824,9 +3887,7 @@ local function process_event(source, what)
         if elements[state.active_element] then
             local n = state.active_element
 
-            if n == 0 then
-                --click on background (does not work)
-            elseif element_has_action(elements[n], action) and
+            if element_has_action(elements[n], action) and
                 mouse_hit(elements[n]) then
 
                 elements[n].eventresponder[action](elements[n])
@@ -3901,6 +3962,7 @@ local function enable_osc(enable)
             mp.disable_key_bindings("showhide_wc")
         end
         state.showhide_enabled = false
+        disable_video_click_area()
     end
 end
 
@@ -4001,6 +4063,7 @@ local function render()
         state.input_enabled = state.osc_visible
     end
     refresh_input_area()
+    refresh_video_click_area()
 
     update_input_area("window-controls", state.wc_visible, "windowcontrols_buttons", function() mp.enable_key_bindings("window-controls") end)
     update_input_area("window-controls-title", state.wc_visible, "windowcontrols_title", function() mp.enable_key_bindings("window-controls-title", "allow-vo-dragging") end)
@@ -4107,6 +4170,7 @@ tick = function()
             render()
         else
             render_wipe(state.osd)
+            disable_video_click_area()
             if state.showhide_enabled then
                 mp.disable_key_bindings("showhide")
                 mp.disable_key_bindings("showhide_wc")
@@ -4277,6 +4341,12 @@ mp.set_key_bindings({
                  function() process_event("shift+mbtn_left", "down")  end},
 }, "input_mid", "force")
 mp.enable_key_bindings("input_mid")
+
+mp.set_key_bindings({
+    {"mbtn_left",           function() handle_video_click("up") end,
+                            function() handle_video_click("down") end},
+}, "video_click", "force")
+set_virt_mouse_area(0, 0, 0, 0, "video_click")
 
 mp.set_key_bindings({
     {"mbtn_left",           function() process_event("mbtn_left", "up") end,

@@ -43,6 +43,7 @@ Create `modernz.conf` in your mpv script-opts directory:
 | osc_on_start         | both    | show OSC/window controls on start of every file (`no`, `bottom`, `top`, `both`)                                                                    |
 | mouse_seek_pause     | yes     | pause video while seeking with mouse move (on button hold)                                                                                         |
 | force_seek_tooltip   | no      | force show seekbar tooltip on mouse drag, even if not hovering seekbar                                                                             |
+| click_to_pause       | yes     | toggle play/pause on left click on the video area                                                                                                  |
 | vidscale             | auto    | scale osc with the video. (set to `"no"` to disable)                                                                                               |
 | scalewindowed        | 1.0     | osc scale factor when windowed                                                                                                                     |
 | scalefullscreen      | 1.0     | osc scale factor when fullscreen                                                                                                                   |
