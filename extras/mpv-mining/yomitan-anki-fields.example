@@ -1,0 +1,23 @@
+# Yomitan -> Anki field mapping for ModernZ sentence mining
+# Deck: Anime::Mining
+# Model: ModernZ Mining Sentence
+#
+# Configure in Yomitan:
+#   Settings -> Anki -> Enable Anki integration
+#   -> Configure Anki card format -> Terms tab
+#   -> Deck: Anime::Mining, Model: ModernZ Mining Sentence
+
+Anki field          | Yomitan marker                              | Notes
+--------------------|---------------------------------------------|------------------------------------------
+VocabKanji          | {expression}                                | Optional target word on the back
+VocabDef            | {glossary-brief}                            | Optional definition on the back
+SentKanji           | {cloze-prefix}{cloze-body}{cloze-suffix}    | Sentence context; front stays sentence-first
+VocabPitchPattern   | {pitch-accents}                             | Optional
+VocabPitchNum       | {pitch-accent-positions}                    | Optional
+VocabFurigana       | (leave empty)                               | AJT Japanese fills after note creation
+SentFurigana        | (leave empty)                               | AJT Japanese fills after note creation
+SentEng             | (leave empty)                               | Filled by mpvacious from English secondary subs
+SentAudio           | (leave empty)                               | Filled by mpvacious from anime audio
+Image               | (leave empty)                               | Filled by mpvacious from the scene screenshot
+VocabAudio          | (leave empty)                               | Optional
+Notes               | (leave empty)                               | Optional

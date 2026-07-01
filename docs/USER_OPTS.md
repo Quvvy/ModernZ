@@ -120,6 +120,7 @@ watch-later-options-remove=osd-margin-y
 | ontop_button               | yes           | show `window on top (pin)` button                                                                                  |
 | ontop_in_topbar            | no            | move ontop button to top bar when ontop is active                                                                  |
 | screenshot_button          | yes           | show screenshot button                                                                                             |
+| mining_button              | no            | show Anki sentence mining button (requires mpvacious)                                                              |
 | download_button            | yes           | show download button on web videos (requires yt-dlp and ffmpeg)                                                    |
 | download_path              | ~~desktop/mpv | default download directory for videos. [Learn more about setting paths here](https://mpv.io/manual/master/#paths). |
 | loop_button                | yes           | show `file loop` button                                                                                            |
@@ -283,6 +284,11 @@ Customize the button function based on mouse actions.
 | Info button                   | info_mbtn_left_command           | `script-binding stats/display-page-1-toggle` |
 | Pin (ontop) button            | ontop_mbtn_left_command          | `osd-msg cycle ontop`                        |
 | Screenshot button             | screenshot_mbtn_left_command     | `osd-msg screenshot video`                   |
+| Anki mining button            | mining_mbtn_left_command         | `script-binding mpvacious-export-note`       |
+|                               | mining_mbtn_mid_command          | `script-binding mpvacious-copy-primary-sub-to-clipboard` |
+|                               | mining_mbtn_right_command        | `script-binding mpvacious-menu-open`         |
+|                               | mining_wheel_down_command        | `script-binding mpvacious-sub-seek-forward`  |
+|                               | mining_wheel_up_command          | `script-binding mpvacious-sub-seek-back`     |
 | Loop button                   | file_loop_mbtn_left_command      | `osd-msg cycle-values loop-file inf no`      |
 |                               | file_loop_mbtn_right_command     | `osd-msg cycle-values loop-playlist inf no`  |
 | Speed button                  | speed_mbtn_left_command          | `osd-msg add speed 1`                        |

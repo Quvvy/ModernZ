@@ -1,0 +1,46 @@
+{
+  "_readme": "Reference only - not a full Yomitan settings export. Copy these values manually in Yomitan Settings, or merge the anki and clipboard sections into your own Backup export before importing.",
+  "_docs": "extras/mpv-mining/YOMITAN-SETUP.md",
+  "clipboard": {
+    "enableBackgroundMonitor": false,
+    "enableSearchPageMonitor": true,
+    "autoSearchContent": true,
+    "maximumSearchLength": 1000
+  },
+  "anki": {
+    "enable": true,
+    "server": "http://127.0.0.1:8765",
+    "checkForDuplicates": false,
+    "cardFormats": [
+      {
+        "name": "Mining",
+        "type": "term",
+        "icon": "big-circle",
+        "deck": "Anime::Mining",
+        "model": "ModernZ Mining Sentence",
+        "fields": {
+          "VocabKanji": {
+            "value": "{expression}",
+            "overwriteMode": "coalesce"
+          },
+          "VocabDef": {
+            "value": "{glossary-brief}",
+            "overwriteMode": "coalesce"
+          },
+          "SentKanji": {
+            "value": "{cloze-prefix}{cloze-body}{cloze-suffix}",
+            "overwriteMode": "coalesce"
+          },
+          "VocabPitchPattern": {
+            "value": "{pitch-accents}",
+            "overwriteMode": "coalesce"
+          },
+          "VocabPitchNum": {
+            "value": "{pitch-accent-positions}",
+            "overwriteMode": "coalesce"
+          }
+        }
+      }
+    ]
+  }
+}

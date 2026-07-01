@@ -110,6 +110,16 @@ Below is a list that explains the OSC buttons function depending on how you inte
 | ---------------- | ----------------- |
 | Left mouse click | Take a screenshot |
 
+### Anki Mining
+
+| Action                 | Function                         |
+| ---------------------- | -------------------------------- |
+| Left mouse click       | Create a sentence card           |
+| Right mouse click      | Open the mpvacious mining menu   |
+| Middle mouse click     | Copy the current Japanese subtitle |
+| Shift+left mouse click | Copy the current Japanese subtitle |
+| Scroll wheel           | Move to previous/next subtitle   |
+
 ### Pin
 
 | Action            | Function                                                      |

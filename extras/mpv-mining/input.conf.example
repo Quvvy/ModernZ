@@ -1,9 +1,10 @@
 # Jimaku subs manual reselect
 Ctrl+Shift+j    script-binding jimaku-subs/reselect
 
-# mpvacious — Anki sentence mining (https://github.com/Ajatt-Tools/mpvacious)
+# mpvacious - Anki sentence mining (https://github.com/Ajatt-Tools/mpvacious)
+# Optional Yomitan workflow: autoclip (Ctrl+t) copies JP subs to clipboard.
 a               script-binding mpvacious-menu-open
-g               script-binding mpvacious-quick-card-menu-open
+g               script-binding mpvacious-export-note
 Alt+g           script-binding mpvacious-quick-card-sel-menu-open
 Ctrl+n          script-binding mpvacious-export-note
 Ctrl+b          script-binding mpvacious-update-selected-note

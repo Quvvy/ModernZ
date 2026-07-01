@@ -1,8 +1,8 @@
-# mpvacious mining config for Seanime + Jimaku workflow
-# Copy to portable_config/script-opts/subs2srs.conf (installer may create a default — merge these settings)
+# mpvacious mining config for ModernZ sentence-first mining.
+# Copy to portable_config/script-opts/subs2srs.conf (installer may create a default; merge these settings).
 
 deck_name=Anime::Mining
-model_name=Japanese sentences
+model_name=ModernZ Mining Sentence
 sentence_field=SentKanji
 secondary_field=SentEng
 audio_field=SentAudio
@@ -20,3 +20,13 @@ secondary_sub_auto_load=yes
 secondary_sub_lang=eng,en
 secondary_sub_visibility=auto
 enable_new_note_timer=yes
+
+# Optional Yomitan workflow: copy JP subs to clipboard as they appear.
+autoclip=yes
+autoclip_method=clipboard
+
+# Slightly wider audio clips around dialogue (helps debrid streams)
+audio_padding=0.3
+
+# Play clip after note creation to confirm audio was cut correctly
+preview_audio=yes

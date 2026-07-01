@@ -89,6 +89,7 @@ ModernZ currently includes translations for the following languages:
         "unshuffle": "Shuffle playlist off",
         "speed_control": "Playback speed",
         "screenshot": "Screenshot",
+        "mining": "Mine sentence",
         "stats_info": "Statistics",
         "cache": "Cache",
         "buffering": "Buffering",
@@ -148,6 +149,7 @@ ModernZ currently includes translations for the following languages:
 | `playlist_loop_enable`/`playlist_loop_disable` | Playlist loop states           | Action labels    |
 | `shuffle`/`unshuffle`                          | Playlist shuffle states        | Action labels    |
 | `screenshot`                                   | Screenshot                     | Button label     |
+| `mining`                                       | Anki mining action             | Button label     |
 | `stats_info`                                   | Statistics                     | Button label     |
 | `cache`                                        | Cache                          | Text label       |
 | `buffering`                                    | Buffering                      | State label      |

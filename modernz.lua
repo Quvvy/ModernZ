@@ -112,6 +112,7 @@ local user_opts = {
     ontop_button = true,                   -- show window on top button
     ontop_in_topbar = false,               -- move ontop button to top bar when ontop is active
     screenshot_button = true,              -- show screenshot button
+    mining_button = false,                 -- show Anki mining button (requires mpvacious)
 
     download_button = true,                -- show download button on web videos (requires yt-dlp and ffmpeg)
     download_path = "~~desktop/mpv",       -- default download directory for videos (https://mpv.io/manual/master/#paths)
@@ -295,6 +296,13 @@ local user_opts = {
     -- screenshot button mouse actions
     screenshot_mbtn_left_command = "osd-msg screenshot video",
 
+    -- Anki mining button mouse actions (requires mpvacious)
+    mining_mbtn_left_command = "script-binding mpvacious-export-note",
+    mining_mbtn_mid_command = "script-binding mpvacious-copy-primary-sub-to-clipboard",
+    mining_mbtn_right_command = "script-binding mpvacious-menu-open",
+    mining_wheel_down_command = "script-binding mpvacious-sub-seek-forward",
+    mining_wheel_up_command = "script-binding mpvacious-sub-seek-back",
+
     -- loop file button mouse actions
     file_loop_mbtn_left_command = "osd-msg cycle-values loop-file inf no",
     file_loop_mbtn_right_command = "osd-msg cycle-values loop-playlist inf no",
@@ -359,6 +367,7 @@ local function build_icons(theme_name, style)
 
         audio        = o("surround_sound"),
         subtitle     = o("subtitles"),
+        mining       = o("subtitles"),
         playlist     = o("playlist_play"),
         menu         = o("more_vert"),
         volume_mute  = o("no_sound"),
@@ -417,6 +426,7 @@ local language = {
         unshuffle = "Shuffle playlist off",
         speed_control = "Playback speed",
         screenshot = "Screenshot",
+        mining = "Mine sentence",
         stats_info = "Statistics",
         cache = "Cache",
         buffering = "Buffering",
@@ -2400,17 +2410,19 @@ layouts["default"] = function ()
         end
     end
 
+    local mining_button_space = user_opts.mining_button and 100 or 0
     right_side_button("fullscreen", 550, user_opts.fullscreen_button)
     right_side_button("info", 650, user_opts.info_button)
     right_side_button("ontop", 750, user_opts.ontop_button and not (window_controls_enabled() and user_opts.ontop_in_topbar and state.ontop))
     right_side_button("screenshot", 850, user_opts.screenshot_button)
-    right_side_button("file_loop", 950, user_opts.loop_button)
-    right_side_button("shuffle", 1050, user_opts.shuffle_button)
-    right_side_button("speed", 1150, user_opts.speed_button, osc_styles.speed, 42)
-    right_side_button("download", 1150, state.is_url and user_opts.download_button)
+    right_side_button("mining", 950, user_opts.mining_button)
+    right_side_button("file_loop", 950 + mining_button_space, user_opts.loop_button)
+    right_side_button("shuffle", 1050 + mining_button_space, user_opts.shuffle_button)
+    right_side_button("speed", 1150 + mining_button_space, user_opts.speed_button, osc_styles.speed, 42)
+    right_side_button("download", 1150 + mining_button_space, state.is_url and user_opts.download_button)
 
     if user_opts.cache_info then
-        right_side_button("cache_info", 1250, user_opts.cache_info, osc_styles.cache, user_opts.cache_info_speed and 70 or 45)
+        right_side_button("cache_info", 1250 + mining_button_space, user_opts.cache_info, osc_styles.cache, user_opts.cache_info_speed and 70 or 45)
         lo.geometry.x  = lo.geometry.x + 7
         lo.geometry.an = 6
         lo.alpha[3] = 0
@@ -2620,13 +2632,15 @@ layouts["compact"] = function ()
         end
     end
 
+    local mining_button_space = user_opts.mining_button and 100 or 0
     right_side_button("fullscreen", 300, user_opts.fullscreen_button)
     right_side_button("ontop", 400, user_opts.ontop_button and not (window_controls_enabled() and user_opts.ontop_in_topbar and state.ontop))
     right_side_button("sub_track", 500, user_opts.subtitles_button and state.sub_track_count > 0)
     right_side_button("audio_track", 600, user_opts.audio_tracks_button and state.audio_track_count > 0)
     right_side_button("playlist", 300, user_opts.playlist_button)
-    right_side_button("download", 800, state.is_url and user_opts.download_button)
-    right_side_button("speed", 800, user_opts.speed_button, osc_styles.speed, 42)
+    right_side_button("mining", 700, user_opts.mining_button)
+    right_side_button("download", 800 + mining_button_space, state.is_url and user_opts.download_button)
+    right_side_button("speed", 800 + mining_button_space, user_opts.speed_button, osc_styles.speed, 42)
 
     -- time codes
     local time_codes_width = get_time_codes_width()
@@ -2795,13 +2809,15 @@ layouts["mini"] = function ()
         end
     end
 
+    local mining_button_space = user_opts.mining_button and 100 or 0
     right_side_button("fullscreen", 250, user_opts.fullscreen_button)
     right_side_button("ontop", 300, user_opts.ontop_button and not (window_controls_enabled() and user_opts.ontop_in_topbar and state.ontop))
     right_side_button("sub_track", 400, user_opts.subtitles_button and state.sub_track_count > 0)
     right_side_button("audio_track", 500, user_opts.audio_tracks_button and state.audio_track_count > 0)
     right_side_button("playlist", 600, user_opts.playlist_button)
-    right_side_button("download", 700, state.is_url and user_opts.download_button)
-    right_side_button("speed", 700, user_opts.speed_button, osc_styles.speed, 42)
+    right_side_button("mining", 700, user_opts.mining_button)
+    right_side_button("download", 700 + mining_button_space, state.is_url and user_opts.download_button)
+    right_side_button("speed", 700 + mining_button_space, user_opts.speed_button, osc_styles.speed, 42)
 
     -- time codes
     local time_codes_width = get_time_codes_width()
@@ -3412,6 +3428,12 @@ local function osc_init()
     ne.content = icons.screenshot
     ne.tooltipF = locale.screenshot
     bind_buttons("screenshot")
+
+    -- Anki mining
+    ne = new_element("mining", "button")
+    ne.content = icons.mining
+    ne.tooltipF = locale.mining
+    bind_buttons("mining")
 
     --file_loop
     ne = new_element("file_loop", "button")
